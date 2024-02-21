@@ -23,6 +23,9 @@ INSERT_NEW_COMPANY=(
 GET_COMPANY_EMAIL=(
     "SELECT COUNT(*) FROM company WHERE email = %s"
 )
+GET_COMPANY_PROFILE=(
+     "SELECT row_to_json(company) AS result  FROM company WHERE email = %s"
+)
 GET_HASHED_PASSWORD_COMPANY=(
     "SELECT password FROM company WHERE email = %s"
 )
@@ -110,7 +113,7 @@ def login_user():
                                 user=cursor.fetchall()
                                 print(user)
                                 # return jsonify({"user":user,"token":access_token})
-                                return access_token
+                                return jsonify({"message":"Loggedin successfully","user":user,"access_token":access_token,"refresh_token":refresh_token})
                         except Exception as e:
                             print(e)
                     else:
@@ -192,13 +195,10 @@ def login_company():
                         cursor.execute(GET_HASHED_PASSWORD_COMPANY,(email,))
                         hashed_password=cursor.fetchone()[0]
                         if answer and  check_password_hash(hashed_password,password):
-                            return jsonify({
-                                "message":"Loggedin ",
-                                "token":{
-                                    "access":access_token,
-                                    "refresh":refresh_token
-                                }
-                            }),200
+                            cursor.execute(GET_COMPANY_PROFILE,(email,))
+                            user=cursor.fetchall()
+                            return jsonify({"message":"Loggedin successfully","user":user,"access_token":access_token,"refresh_token":refresh_token}),201
+
                     except Exception as e:
                          print(e)
             except Exception as e:
